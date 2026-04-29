@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    font-family: "Inter", system-ui, sans-serif;
+    background: linear-gradient(180deg, #f6f7f9 0%, #eceef2 100%);
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-molten-600 text-white hover:bg-molten-700 active:scale-[0.98] shadow-lg shadow-molten-600/20;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-steel-800 border border-steel-200 hover:bg-steel-50;
+  }
+  .btn-ghost {
+    @apply btn text-steel-600 hover:bg-steel-100;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-steel-200/60 shadow-sm;
+  }
+  .label {
+    @apply text-xs font-semibold uppercase tracking-wide text-steel-500;
+  }
+  .input {
+    @apply w-full rounded-lg border border-steel-200 bg-white px-3 py-2 text-sm text-steel-900 placeholder:text-steel-400 focus:border-molten-500 focus:outline-none focus:ring-2 focus:ring-molten-500/20;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  .badge-success {
+    @apply badge bg-emerald-100 text-emerald-800;
+  }
+  .badge-warning {
+    @apply badge bg-amber-100 text-amber-800;
+  }
+  .badge-info {
+    @apply badge bg-sky-100 text-sky-800;
+  }
+  .badge-neutral {
+    @apply badge bg-steel-100 text-steel-700;
+  }
+  .badge-danger {
+    @apply badge bg-rose-100 text-rose-800;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.32s ease-out both;
+}
+
+@keyframes pop-in {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-pop-in {
+  animation: pop-in 0.36s cubic-bezier(0.18, 1.6, 0.5, 1) both;
+}
+
+@keyframes flash-green {
+  0% { background-color: rgba(16, 185, 129, 0.0); }
+  20% { background-color: rgba(16, 185, 129, 0.18); }
+  100% { background-color: rgba(16, 185, 129, 0.0); }
+}
+.animate-flash-green {
+  animation: flash-green 1s ease-out both;
+}
+
+@keyframes flash-red {
+  0% { background-color: rgba(244, 63, 94, 0.0); }
+  20% { background-color: rgba(244, 63, 94, 0.18); }
+  100% { background-color: rgba(244, 63, 94, 0.0); }
+}
+.animate-flash-red {
+  animation: flash-red 1s ease-out both;
+}
+
+@keyframes shine {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: shine 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes drive {
+  0% { transform: translateX(-10%); }
+  100% { transform: translateX(110%); }
+}
+.animate-drive {
+  animation: drive 18s linear infinite;
+}
+
+@keyframes overtime-bar {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.dot-grid {
+  background-image: radial-gradient(rgba(82, 94, 120, 0.18) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
