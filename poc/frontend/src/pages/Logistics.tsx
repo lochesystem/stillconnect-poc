@@ -1,13 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Clock,
+  Factory,
   Hourglass,
   MapPin,
-  Package,
   Pen,
   ShieldCheck,
   Sparkles,
@@ -50,6 +50,30 @@ export default function Logistics() {
   const totalMs = 30000;
   const windowPct = remainingMs == null ? 0 : 100 - (remainingMs / totalMs) * 100;
 
+  // Animação do caminhão: 0..1 representa progresso da rota
+  const DRIVE_DURATION_MS = 5000;
+  const [driving, setDriving] = useState(false);
+  const driveTimerRef = useRef<number | null>(null);
+
+  // posição do caminhão (em %): 0 = origem, 100 = destino
+  const truckPct = isDelivered || isConcluded ? 100 : driving ? 100 : isPickedUp ? 0 : 0;
+
+  async function handleStartDelivery() {
+    if (driving || isDelivered) return;
+    setDriving(true);
+    if (driveTimerRef.current) window.clearTimeout(driveTimerRef.current);
+    driveTimerRef.current = window.setTimeout(async () => {
+      await deliver(contract!.id);
+      setDriving(false);
+    }, DRIVE_DURATION_MS);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (driveTimerRef.current) window.clearTimeout(driveTimerRef.current);
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <button
@@ -70,40 +94,110 @@ export default function Logistics() {
       </header>
 
       <section className="card p-0 overflow-hidden" data-tour="map">
-        <div className="relative h-44 bg-gradient-to-br from-steel-100 to-steel-200 dot-grid">
-          <div className="absolute inset-0 flex items-center justify-between px-6 text-steel-500 text-xs font-medium">
-            <div className="flex items-center gap-1">
-              <Package className="w-3 h-3" /> CD do Fornecedor · {supplier?.uf}
+        <div className="relative h-48 bg-gradient-to-br from-steel-100 to-steel-200 dot-grid">
+          <div className="absolute inset-x-0 top-3 flex items-start justify-between px-6 text-steel-500 text-xs font-medium gap-3">
+            <div className="flex items-center gap-1.5">
+              <Factory className="w-3.5 h-3.5" /> CD do Fornecedor · {supplier?.uf}
             </div>
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {/* destination */}{" "}
-              Cliente · São Paulo
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" /> Cliente · São Paulo
             </div>
           </div>
-          <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-steel-300/60 rounded-full" />
-          {!isConcluded && isPickedUp && (
-            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0">
+
+          {/* trilho da rota */}
+          <div className="absolute left-12 right-12 top-1/2 -translate-y-1/2 h-1 bg-steel-300/70 rounded-full overflow-hidden">
+            <div
+              className={`h-full bg-gradient-to-r from-molten-500 to-molten-400 ${
+                driving ? "transition-[width] ease-linear" : "transition-[width] duration-500"
+              }`}
+              style={{
+                width: `${truckPct}%`,
+                transitionDuration: driving ? `${DRIVE_DURATION_MS}ms` : undefined,
+              }}
+            />
+          </div>
+
+          {/* pino origem */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-12 -translate-x-1/2">
+            <div
+              className={`w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white shadow ${
+                isPickedUp ? "bg-emerald-500" : "bg-steel-400"
+              }`}
+            >
+              <Factory className="w-2.5 h-2.5 text-white" />
+            </div>
+          </div>
+
+          {/* pino destino */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-12 translate-x-1/2">
+            <div
+              className={`w-5 h-5 rounded-full flex items-center justify-center ring-4 ring-white shadow ${
+                isDelivered || isConcluded ? "bg-emerald-500" : "bg-steel-400"
+              }`}
+            >
+              <MapPin className="w-2.5 h-2.5 text-white" />
+            </div>
+          </div>
+
+          {/* caminhão posicionado entre os pinos (com base nos 12px de padding) */}
+          {isPickedUp && (
+            <div
+              className="absolute top-1/2"
+              style={{
+                left: `calc(48px + (100% - 96px) * ${truckPct / 100})`,
+                transform: "translate(-50%, -50%)",
+                transition: driving
+                  ? `left ${DRIVE_DURATION_MS}ms linear`
+                  : "left 500ms ease-out",
+              }}
+            >
               <div
-                className={`inline-block animate-drive ${
-                  isDelivered ? "opacity-50" : ""
+                className={`relative ${
+                  driving
+                    ? "animate-truck-driving"
+                    : isDelivered || isConcluded
+                    ? ""
+                    : "animate-truck-idle"
                 }`}
               >
-                <Truck className="w-6 h-6 text-molten-600 drop-shadow" />
+                <Truck
+                  className={`w-7 h-7 drop-shadow-md ${
+                    isDelivered || isConcluded
+                      ? "text-emerald-600"
+                      : "text-molten-600"
+                  }`}
+                />
+                {(isDelivered || isConcluded) && (
+                  <div className="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-0.5 shadow animate-pop-in">
+                    <CheckCircle2 className="w-3 h-3" />
+                  </div>
+                )}
               </div>
             </div>
           )}
+
           {!isPickedUp && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-x-0 bottom-3 flex justify-center">
               <span className="badge-warning">
                 <Hourglass className="w-3 h-3" /> Aguardando token de carga
               </span>
             </div>
           )}
-          {isDelivered && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="bg-emerald-500 text-white rounded-full p-2 shadow-lg shadow-emerald-500/40 animate-pop-in">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
+
+          {driving && (
+            <div className="absolute inset-x-0 bottom-3 flex justify-center">
+              <span className="badge-info animate-pulse-soft">
+                <Truck className="w-3 h-3" />
+                Em trânsito · GPS ativo
+              </span>
+            </div>
+          )}
+
+          {(isDelivered || isConcluded) && !driving && (
+            <div className="absolute inset-x-0 bottom-3 flex justify-center">
+              <span className="badge-success">
+                <CheckCircle2 className="w-3 h-3" /> Entregue · prova criptográfica capturada
+              </span>
             </div>
           )}
         </div>
@@ -163,18 +257,32 @@ export default function Logistics() {
       {isPickedUp && !isDelivered && (
         <div className="card p-5 flex items-center gap-3 justify-between flex-wrap">
           <div>
-            <h3 className="font-semibold text-steel-900">Caminhão em trânsito</h3>
+            <h3 className="font-semibold text-steel-900">
+              {driving ? "Caminhão em trânsito" : "Pronto para iniciar a entrega"}
+            </h3>
             <p className="text-sm text-steel-600">
-              {carrier?.fantasia} a caminho de São Paulo. ETA simulada: 1m20s.
+              {driving
+                ? `${carrier?.fantasia} a caminho de São Paulo. Hash + GPS sendo capturados.`
+                : `${carrier?.fantasia} aguardando despacho do CD do fornecedor.`}
             </p>
           </div>
           <button
-            onClick={() => deliver(contract.id)}
+            onClick={handleStartDelivery}
+            disabled={driving}
             className="btn-primary"
             data-tour="confirm-delivery"
           >
-            Simular entrega
-            <ArrowRight className="w-4 h-4" />
+            {driving ? (
+              <>
+                <Truck className="w-4 h-4 animate-pulse-soft" />
+                Em trânsito…
+              </>
+            ) : (
+              <>
+                Iniciar entrega
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       )}
