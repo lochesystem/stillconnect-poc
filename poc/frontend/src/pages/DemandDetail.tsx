@@ -6,7 +6,10 @@ import {
   Briefcase,
   Eye,
   EyeOff,
+  FileSignature,
+  Gavel,
   Sparkles,
+  Trophy,
   Truck,
 } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +28,8 @@ export default function DemandDetail() {
   const matches = db.matches.filter((m) => m.demand_id === id);
   const suppliers = matches.filter((m) => m.org_kind === "SUPPLIER");
   const carriers = matches.filter((m) => m.org_kind === "CARRIER");
+  const auctions = db.auctions.filter((a) => a.demand_id === id);
+  const contract = db.contracts.find((c) => c.demand_id === id);
 
   if (!demand) {
     return (
@@ -34,6 +39,9 @@ export default function DemandDetail() {
 
   const selectedSuppliers = suppliers.filter((m) => m.selected).length;
   const selectedCarriers = carriers.filter((m) => m.selected).length;
+
+  const inAuction = auctions.length === 2 && !contract;
+  const concluded = !!contract;
 
   function handleStart() {
     try {
@@ -81,45 +89,137 @@ export default function DemandDetail() {
         </div>
       </header>
 
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="font-semibold text-steel-900">Selecione os participantes do leilão</h2>
-            <p className="text-xs text-steel-500">
-              Escolha pelo menos 2 fornecedores e 2 transportadoras com base em score, selos e histórico.
-            </p>
+      {concluded && contract ? (
+        <ContractGeneratedCard contractId={contract.id} navigate={navigate} />
+      ) : inAuction ? (
+        <AuctionInProgressCard demandId={id} navigate={navigate} />
+      ) : (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="font-semibold text-steel-900">Selecione os participantes do leilão</h2>
+              <p className="text-xs text-steel-500">
+                Escolha pelo menos 2 fornecedores e 2 transportadoras com base em score, selos e histórico.
+              </p>
+            </div>
+            <button
+              onClick={handleStart}
+              disabled={selectedSuppliers < 2 || selectedCarriers < 2}
+              className="btn-primary"
+              data-tour="start-auction"
+            >
+              <Sparkles className="w-4 h-4" />
+              Iniciar micro-leilão
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={handleStart}
-            disabled={selectedSuppliers < 2 || selectedCarriers < 2}
-            className="btn-primary"
-            data-tour="start-auction"
-          >
-            <Sparkles className="w-4 h-4" />
-            Iniciar micro-leilão
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Group
-            title="Fornecedores"
-            icon={Briefcase}
-            matches={suppliers}
-            db={db}
-            countSelected={selectedSuppliers}
-            min={2}
-          />
-          <Group
-            title="Transportadoras"
-            icon={Truck}
-            matches={carriers}
-            db={db}
-            countSelected={selectedCarriers}
-            min={2}
-          />
-        </div>
-      </section>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Group
+              title="Fornecedores"
+              icon={Briefcase}
+              matches={suppliers}
+              db={db}
+              countSelected={selectedSuppliers}
+              min={2}
+            />
+            <Group
+              title="Transportadoras"
+              icon={Truck}
+              matches={carriers}
+              db={db}
+              countSelected={selectedCarriers}
+              min={2}
+            />
+          </div>
+        </section>
+      )}
     </div>
+  );
+}
+
+function AuctionInProgressCard({
+  demandId,
+  navigate,
+}: {
+  demandId: string;
+  navigate: (to: string) => void;
+}) {
+  return (
+    <section className="card p-6 bg-gradient-to-br from-molten-50 to-white border-molten-300/60 relative overflow-hidden">
+      <div className="absolute top-3 right-3">
+        <span className="badge-warning animate-pulse-soft">
+          <Gavel className="w-3 h-3" />
+          AO VIVO
+        </span>
+      </div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-xl bg-molten-600 text-white flex items-center justify-center shadow-lg shadow-molten-600/30">
+          <Gavel className="w-6 h-6" />
+        </div>
+        <div>
+          <div className="text-xs text-steel-500 font-semibold uppercase tracking-widest">
+            Sala privada · server-time UTC
+          </div>
+          <h2 className="font-bold text-xl text-steel-900">Leilão em andamento</h2>
+        </div>
+      </div>
+      <p className="text-sm text-steel-600 max-w-2xl">
+        O micro-leilão reverso já foi iniciado. Lances chegando em tempo real, soft close
+        ativo. Você pode acompanhar e dar lance manual.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => navigate(`/auction/${demandId}`)}
+          className="btn-primary"
+        >
+          Voltar ao leilão
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ContractGeneratedCard({
+  contractId,
+  navigate,
+}: {
+  contractId: string;
+  navigate: (to: string) => void;
+}) {
+  return (
+    <section className="card p-6 bg-gradient-to-br from-emerald-50 to-white border-emerald-300/60 relative overflow-hidden">
+      <div className="absolute top-3 right-3">
+        <span className="badge-success">
+          <Trophy className="w-3 h-3" />
+          ENCERRADA
+        </span>
+      </div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30">
+          <FileSignature className="w-6 h-6" />
+        </div>
+        <div>
+          <div className="text-xs text-steel-500 font-semibold uppercase tracking-widest">
+            Vencedores definidos pelo mercado
+          </div>
+          <h2 className="font-bold text-xl text-steel-900">Contrato gerado</h2>
+        </div>
+      </div>
+      <p className="text-sm text-steel-600 max-w-2xl">
+        O leilão foi encerrado e o contrato foi gerado automaticamente unindo os
+        vencedores do produto e do frete. Continue o fluxo a partir daqui.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => navigate(`/contract/${contractId}`)}
+          className="btn-primary"
+        >
+          Ver contrato + FSM
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </section>
   );
 }
 

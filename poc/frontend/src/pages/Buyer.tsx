@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight, Plus, Briefcase, BadgeCheck, Eye, EyeOff } from "lucide-react";
 import { useDB } from "../components/useDB";
 import { brl, dt, kg } from "../lib/format";
-import type { Demand } from "../mock/types";
+import type { Demand, MockDB } from "../mock/types";
 import { useMemo, useState } from "react";
 
 const STATUS_LABELS: Record<Demand["status"], { label: string; tone: string }> = {
@@ -100,7 +100,7 @@ export default function Buyer() {
             {demands.map((d) => (
               <li key={d.id} data-tour={`demand-${d.id}`}>
                 <Link
-                  to={`/buyer/demand/${d.id}`}
+                  to={routeFor(d, db)}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-steel-50 transition-colors"
                 >
                   <div className="w-9 h-9 rounded-md bg-molten-100 text-molten-700 flex items-center justify-center font-mono text-xs">
@@ -139,4 +139,12 @@ export default function Buyer() {
       </section>
     </div>
   );
+}
+
+function routeFor(d: Demand, db: MockDB): string {
+  const contract = db.contracts.find((c) => c.demand_id === d.id);
+  if (contract) return `/contract/${contract.id}`;
+  const auctions = db.auctions.filter((a) => a.demand_id === d.id);
+  if (auctions.length === 2) return `/auction/${d.id}`;
+  return `/buyer/demand/${d.id}`;
 }

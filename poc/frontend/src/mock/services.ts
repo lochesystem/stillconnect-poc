@@ -138,6 +138,14 @@ export function startAuction(demandId: string): { product: Auction; freight: Auc
   const dem = db.demands.find((d) => d.id === demandId);
   if (!dem) throw new Error("demand not found");
 
+  // idempotência: se já existe leilão para a demanda, devolve o existente
+  const existing = db.auctions.filter((a) => a.demand_id === demandId);
+  if (existing.length === 2) {
+    const product = existing.find((a) => a.lane === "PRODUCT")!;
+    const freight = existing.find((a) => a.lane === "FREIGHT")!;
+    return { product, freight };
+  }
+
   const matches = db.matches.filter((m) => m.demand_id === demandId && m.selected);
   const suppliersSelected = matches.filter((m) => m.org_kind === "SUPPLIER").length;
   const carriersSelected = matches.filter((m) => m.org_kind === "CARRIER").length;
