@@ -128,7 +128,7 @@ export default function NewDemand() {
                 value={target}
                 onChange={(e) => setTarget(Number(e.target.value))}
                 min={1}
-                step={100}
+                step="any"
                 required
               />
             </div>
