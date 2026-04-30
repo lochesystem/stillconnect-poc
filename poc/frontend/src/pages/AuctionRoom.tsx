@@ -17,6 +17,7 @@ import {
   listAuctionsFor,
   listBidsFor,
   listMatchesFor,
+  OVERTIME_MAX,
   placeBid,
   tryGenerateContract,
 } from "../mock/services";
@@ -68,9 +69,9 @@ export default function AuctionRoom() {
         // não permite mesmo bidder dar lance consecutivo se já é o melhor
         if (candidate.org_id === auc.best_bidder_id) continue;
 
-        const drop = 0.005 + Math.random() * 0.012; // 0.5% - 1.7% drop
+        const drop = 0.01 + Math.random() * 0.02; // 1% - 3% drop
         const newAmount = Math.max(
-          Math.round(auc.start_price_brl * 0.55 * 100) / 100,
+          Math.round(auc.start_price_brl * 0.4 * 100) / 100,
           Math.round(auc.current_best_brl * (1 - drop) * 100) / 100,
         );
         if (newAmount >= auc.current_best_brl) continue;
@@ -207,7 +208,9 @@ function Lane({
   const [bidValue, setBidValue] = useState<number>(0);
 
   useEffect(() => {
-    setBidValue(Math.max(0, Math.round((auction.current_best_brl - 50) * 100) / 100));
+    setBidValue(
+      Math.max(0, Math.round(auction.current_best_brl * 0.985 * 100) / 100),
+    );
   }, [auction.current_best_brl, auction.id]);
 
   function handleBid() {
@@ -248,7 +251,7 @@ function Lane({
             {overtime && (
               <span className="badge-warning animate-pulse-soft">
                 <Flame className="w-3 h-3" />
-                OVERTIME
+                OVERTIME {auction.overtime_count ?? 0}/{OVERTIME_MAX}
               </span>
             )}
             <span
@@ -310,8 +313,7 @@ function Lane({
               className="input flex-1 font-mono text-sm"
               value={bidValue || ""}
               onChange={(e) => setBidValue(Number(e.target.value))}
-              step={50}
-              max={auction.current_best_brl - 0.01}
+              step={0.01}
               data-tour={`bid-input-${auction.lane}`}
             />
             <button

@@ -161,6 +161,7 @@ export function startAuction(demandId: string): { product: Auction; freight: Auc
     started_at: now.toISOString(),
     ends_at: ends.toISOString(),
     ended_at: null,
+    overtime_count: 0,
   };
   const freight: Auction = {
     id: uid("auc"),
@@ -173,6 +174,7 @@ export function startAuction(demandId: string): { product: Auction; freight: Auc
     started_at: now.toISOString(),
     ends_at: ends.toISOString(),
     ended_at: null,
+    overtime_count: 0,
   };
   patchDB((db2) => {
     const d = db2.demands.find((x) => x.id === demandId);
@@ -208,6 +210,10 @@ export interface PlaceBidResult {
   triggeredOvertime?: boolean;
 }
 
+export const OVERTIME_MAX = 3;
+const OVERTIME_THRESHOLD_MS = 6000;
+const OVERTIME_EXTENSION_MS = 5000;
+
 export function placeBid(
   auctionId: string,
   orgId: string,
@@ -223,7 +229,7 @@ export function placeBid(
   if (amount >= auc.current_best_brl) {
     return { ok: false, reason: "lance precisa ser MENOR que o atual" };
   }
-  if (auc.current_best_brl - amount > auc.start_price_brl * 0.5) {
+  if (auc.current_best_brl - amount > auc.start_price_brl * 0.7) {
     return { ok: false, reason: "diminuição implausível" };
   }
 
@@ -241,14 +247,17 @@ export function placeBid(
     is_user: isUser,
   };
 
-  // soft close: if remaining < 8s, extend +8s
+  // soft close: estende somente se houver "tickets" de overtime restantes
   const remaining = new Date(auc.ends_at).getTime() - now.getTime();
+  const overtimeCount = auc.overtime_count ?? 0;
   let triggeredOvertime = false;
   let newEnds = auc.ends_at;
-  let newStatus = auc.status;
-  if (remaining < 8000) {
-    newEnds = new Date(now.getTime() + 8000).toISOString();
+  let newStatus: Auction["status"] = auc.status;
+  let newOvertimeCount = overtimeCount;
+  if (remaining < OVERTIME_THRESHOLD_MS && overtimeCount < OVERTIME_MAX) {
+    newEnds = new Date(now.getTime() + OVERTIME_EXTENSION_MS).toISOString();
     newStatus = "LEILAO_OVERTIME";
+    newOvertimeCount = overtimeCount + 1;
     triggeredOvertime = true;
   }
 
@@ -260,6 +269,7 @@ export function placeBid(
     a.best_bidder_id = orgId;
     a.ends_at = newEnds;
     a.status = newStatus;
+    a.overtime_count = newOvertimeCount;
     db2.bids.unshift(bid);
     updated = a;
   });
@@ -267,6 +277,7 @@ export function placeBid(
     org: orgName,
     amount,
     overtime: triggeredOvertime,
+    overtime_count: newOvertimeCount,
   });
   return { ok: true, newAuction: updated, bid, triggeredOvertime };
 }

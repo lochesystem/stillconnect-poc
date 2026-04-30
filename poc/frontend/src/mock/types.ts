@@ -68,6 +68,7 @@ export interface Auction {
   ends_at: string;
   started_at: string;
   ended_at: string | null;
+  overtime_count?: number;
 }
 
 export interface Bid {
