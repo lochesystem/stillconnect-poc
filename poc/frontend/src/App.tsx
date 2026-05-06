@@ -9,6 +9,8 @@ import Contract from "./pages/Contract";
 import Escrow from "./pages/Escrow";
 import Logistics from "./pages/Logistics";
 import Marketplace from "./pages/Marketplace";
+import BuyerOffers from "./pages/BuyerOffers";
+import SupplierOffer from "./pages/SupplierOffer";
 import Admin from "./pages/Admin";
 import { TourOverlay } from "./tour/TourOverlay";
 
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="buyer" element={<Buyer />} />
           <Route path="buyer/new" element={<NewDemand />} />
           <Route path="buyer/demand/:id" element={<DemandDetail />} />
+          <Route path="buyer/demand/:id/offers" element={<BuyerOffers />} />
+          <Route path="supplier/offer/:demandId" element={<SupplierOffer />} />
           <Route path="auction/:demandId" element={<AuctionRoom />} />
           <Route path="contract/:id" element={<Contract />} />
           <Route path="contract/from-demand/:demandId" element={<Contract />} />

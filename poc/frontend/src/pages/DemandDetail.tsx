@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Briefcase,
+  ClipboardList,
   Eye,
   EyeOff,
   FileSignature,
@@ -15,8 +16,8 @@ import {
 import { useState } from "react";
 import { useDB } from "../components/useDB";
 import { brl, dt, kg } from "../lib/format";
-import { startAuction, toggleMatchSelection } from "../mock/services";
-import type { Match } from "../mock/types";
+import { startAuction, startOffersPhase, toggleMatchSelection } from "../mock/services";
+import type { Demand, Match } from "../mock/types";
 
 export default function DemandDetail() {
   const { id = "" } = useParams();
@@ -42,11 +43,21 @@ export default function DemandDetail() {
 
   const inAuction = auctions.length === 2 && !contract;
   const concluded = !!contract;
+  const collectingOffers = demand.status === "DEMANDA_COLETANDO_OFERTAS";
 
-  function handleStart() {
+  function handleStartAuction() {
     try {
       startAuction(id);
       navigate(`/auction/${id}`);
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  }
+
+  function handleStartOffers() {
+    try {
+      startOffersPhase(id);
+      navigate(`/buyer/demand/${id}/offers`);
     } catch (err) {
       alert((err as Error).message);
     }
@@ -73,6 +84,16 @@ export default function DemandDetail() {
               {kg(demand.volume_kg)} · {demand.delivery_city}/{demand.delivery_uf} · até{" "}
               {dt(demand.deadline)}
             </div>
+            <div className="text-xs text-steel-500 mt-2">
+              {demand.negotiation_mode === "OFFERS" ? (
+                <>
+                  Modo <strong>coleta de ofertas (RFQ)</strong> · janela de envio até{" "}
+                  {dt(demand.offers_close_at)}
+                </>
+              ) : (
+                <>Modo <strong>micro-leilão reverso</strong> (canônico)</>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xs text-steel-500 uppercase tracking-wider font-semibold flex items-center gap-1 justify-end">
@@ -90,28 +111,53 @@ export default function DemandDetail() {
       </header>
 
       {concluded && contract ? (
-        <ContractGeneratedCard contractId={contract.id} navigate={navigate} />
-      ) : inAuction ? (
+        <ContractGeneratedCard
+          contractId={contract.id}
+          navigate={navigate}
+          viaOffers={demand.negotiation_mode === "OFFERS"}
+        />
+      ) : demand.negotiation_mode === "AUCTION" && inAuction ? (
         <AuctionInProgressCard demandId={id} navigate={navigate} />
+      ) : collectingOffers ? (
+        <OffersCollectingCard demand={demand} demandId={id} navigate={navigate} />
       ) : (
         <section>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
             <div>
-              <h2 className="font-semibold text-steel-900">Selecione os participantes do leilão</h2>
+              <h2 className="font-semibold text-steel-900">
+                {demand.negotiation_mode === "AUCTION"
+                  ? "Selecione os participantes do leilão"
+                  : "Selecione quem pode enviar ofertas"}
+              </h2>
               <p className="text-xs text-steel-500">
                 Escolha pelo menos 2 fornecedores e 2 transportadoras com base em score, selos e histórico.
               </p>
             </div>
-            <button
-              onClick={handleStart}
-              disabled={selectedSuppliers < 2 || selectedCarriers < 2}
-              className="btn-primary"
-              data-tour="start-auction"
-            >
-              <Sparkles className="w-4 h-4" />
-              Iniciar micro-leilão
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {demand.negotiation_mode === "AUCTION" ? (
+              <button
+                type="button"
+                onClick={handleStartAuction}
+                disabled={selectedSuppliers < 2 || selectedCarriers < 2}
+                className="btn-primary"
+                data-tour="start-auction"
+              >
+                <Sparkles className="w-4 h-4" />
+                Iniciar micro-leilão
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleStartOffers}
+                disabled={selectedSuppliers < 2 || selectedCarriers < 2}
+                className="btn-primary"
+                data-tour="start-offers"
+              >
+                <ClipboardList className="w-4 h-4" />
+                Abrir coleta de ofertas
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Group
@@ -134,6 +180,49 @@ export default function DemandDetail() {
         </section>
       )}
     </div>
+  );
+}
+
+function OffersCollectingCard({
+  demand,
+  demandId,
+  navigate,
+}: {
+  demand: Demand;
+  demandId: string;
+  navigate: (to: string) => void;
+}) {
+  return (
+    <section className="card p-6 bg-gradient-to-br from-indigo-50 to-white border-indigo-200/70 relative overflow-hidden">
+      <div className="absolute top-3 right-3">
+        <span className="badge-info">
+          <ClipboardList className="w-3 h-3" />
+          COLETANDO OFERTAS
+        </span>
+      </div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/25">
+          <ClipboardList className="w-6 h-6" />
+        </div>
+        <div>
+          <div className="text-xs text-steel-500 font-semibold uppercase tracking-widest">
+            Modo RFQ · comprador decide o aceite
+          </div>
+          <h2 className="font-bold text-xl text-steel-900">Coleta de ofertas aberta</h2>
+        </div>
+      </div>
+      <p className="text-sm text-steel-600 max-w-2xl">
+        Fornecedores selecionados podem enviar preço de produto + frete e escolher uma das transportadoras
+        aprovadas. Novas ofertas são aceitas até{" "}
+        <strong className="text-steel-800">{dt(demand.offers_close_at)}</strong>.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => navigate(`/buyer/demand/${demandId}/offers`)} className="btn-primary">
+          Revisar ofertas
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -183,9 +272,11 @@ function AuctionInProgressCard({
 function ContractGeneratedCard({
   contractId,
   navigate,
+  viaOffers,
 }: {
   contractId: string;
   navigate: (to: string) => void;
+  viaOffers?: boolean;
 }) {
   return (
     <section className="card p-6 bg-gradient-to-br from-emerald-50 to-white border-emerald-300/60 relative overflow-hidden">
@@ -201,14 +292,15 @@ function ContractGeneratedCard({
         </div>
         <div>
           <div className="text-xs text-steel-500 font-semibold uppercase tracking-widest">
-            Vencedores definidos pelo mercado
+            {viaOffers ? "Proposta aceita (RFQ)" : "Vencedores definidos pelo mercado"}
           </div>
           <h2 className="font-bold text-xl text-steel-900">Contrato gerado</h2>
         </div>
       </div>
       <p className="text-sm text-steel-600 max-w-2xl">
-        O leilão foi encerrado e o contrato foi gerado automaticamente unindo os
-        vencedores do produto e do frete. Continue o fluxo a partir daqui.
+        {viaOffers
+          ? "Você aceitou uma oferta fechada e o contrato foi gerado automaticamente com fornecedor e transportadora da proposta. Continue o fluxo a partir daqui."
+          : "O leilão foi encerrado e o contrato foi gerado automaticamente unindo os vencedores do produto e do frete. Continue o fluxo a partir daqui."}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <button

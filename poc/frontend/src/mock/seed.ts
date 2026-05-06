@@ -118,6 +118,7 @@ export async function reseed(): Promise<void> {
     matches: [],
     auctions: [],
     bids: [],
+    offers: [],
     contracts: [],
     audit: [
       {

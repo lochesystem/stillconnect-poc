@@ -7,6 +7,7 @@ import type {
   Demand,
   Match,
   Organization,
+  SupplierOffer,
 } from "./types";
 import { logAudit } from "./seed";
 import { encryptJSON, sha256Hex } from "./vault";
@@ -48,12 +49,19 @@ export function createDemand(input: {
   delivery_uf: string;
   deadline_days: number;
   target_price_brl: number;
+  negotiation_mode: Demand["negotiation_mode"];
+  offer_window_days: number;
 }): Demand {
   const id = uid("dem");
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 1000 * 60 * 60 * 48);
+  const offerWindow = Math.max(1, Math.floor(input.offer_window_days));
+  const offersCloseAt = new Date(now.getTime() + 1000 * 60 * 60 * 24 * offerWindow);
   const deadline = new Date(now.getTime() + 1000 * 60 * 60 * 24 * input.deadline_days);
   const buyer = getCurrentBuyer();
+  const expiresAt =
+    input.negotiation_mode === "OFFERS"
+      ? offersCloseAt
+      : new Date(now.getTime() + 1000 * 60 * 60 * 48);
   const demand: Demand = {
     id,
     buyer_id: buyer.id,
@@ -64,6 +72,8 @@ export function createDemand(input: {
     delivery_uf: input.delivery_uf,
     deadline: deadline.toISOString(),
     target_price_brl: input.target_price_brl,
+    negotiation_mode: input.negotiation_mode,
+    offers_close_at: offersCloseAt.toISOString(),
     status: "DEMANDA_PUBLICADA",
     created_at: now.toISOString(),
     expires_at: expiresAt.toISOString(),
@@ -75,9 +85,10 @@ export function createDemand(input: {
     buyer: buyer.fantasia,
     target_price_brl: input.target_price_brl,
     confidential: true,
+    negotiation_mode: input.negotiation_mode,
+    offers_close_at: demand.offers_close_at,
   });
 
-  // simulate market discovering it within ~1.5s
   setTimeout(() => simulateMarketMatches(id), 1500);
   return demand;
 }
@@ -133,10 +144,28 @@ export function toggleMatchSelection(matchId: string, selected: boolean) {
   });
 }
 
+function selectedParticipantsOk(demandId: string): {
+  ok: boolean;
+  suppliers: number;
+  carriers: number;
+} {
+  const matches = readDB().matches.filter((m) => m.demand_id === demandId && m.selected);
+  const suppliersSelected = matches.filter((m) => m.org_kind === "SUPPLIER").length;
+  const carriersSelected = matches.filter((m) => m.org_kind === "CARRIER").length;
+  return {
+    ok: suppliersSelected >= 2 && carriersSelected >= 2,
+    suppliers: suppliersSelected,
+    carriers: carriersSelected,
+  };
+}
+
 export function startAuction(demandId: string): { product: Auction; freight: Auction } {
   const db = readDB();
   const dem = db.demands.find((d) => d.id === demandId);
   if (!dem) throw new Error("demand not found");
+  if (dem.negotiation_mode !== "AUCTION") {
+    throw new Error("Esta demanda está em modo coleta de ofertas, não em leilão");
+  }
 
   // idempotência: se já existe leilão para a demanda, devolve o existente
   const existing = db.auctions.filter((a) => a.demand_id === demandId);
@@ -146,11 +175,11 @@ export function startAuction(demandId: string): { product: Auction; freight: Auc
     return { product, freight };
   }
 
-  const matches = db.matches.filter((m) => m.demand_id === demandId && m.selected);
-  const suppliersSelected = matches.filter((m) => m.org_kind === "SUPPLIER").length;
-  const carriersSelected = matches.filter((m) => m.org_kind === "CARRIER").length;
-  if (suppliersSelected < 2) throw new Error("Selecione ao menos 2 fornecedores");
-  if (carriersSelected < 2) throw new Error("Selecione ao menos 2 transportadoras");
+  const sel = selectedParticipantsOk(demandId);
+  if (!sel.ok) {
+    if (sel.suppliers < 2) throw new Error("Selecione ao menos 2 fornecedores");
+    throw new Error("Selecione ao menos 2 transportadoras");
+  }
 
   const now = new Date();
   const ends = new Date(now.getTime() + 1000 * 35);
@@ -194,6 +223,146 @@ export function startAuction(demandId: string): { product: Auction; freight: Auc
     duration_s: 35,
   });
   return { product, freight };
+}
+
+export function startOffersPhase(demandId: string): void {
+  const db = readDB();
+  const dem = db.demands.find((d) => d.id === demandId);
+  if (!dem) throw new Error("demand not found");
+  if (dem.negotiation_mode !== "OFFERS") {
+    throw new Error("Esta demanda está em modo leilão");
+  }
+  if (dem.status === "DEMANDA_COLETANDO_OFERTAS") return;
+  const sel = selectedParticipantsOk(demandId);
+  if (!sel.ok) {
+    if (sel.suppliers < 2) throw new Error("Selecione ao menos 2 fornecedores");
+    throw new Error("Selecione ao menos 2 transportadoras");
+  }
+  patchDB((db2) => {
+    const d = db2.demands.find((x) => x.id === demandId);
+    if (d) d.status = "DEMANDA_COLETANDO_OFERTAS";
+  });
+  logAudit("OFFERS_PHASE_STARTED", "demand", demandId, {
+    closes_at: dem.offers_close_at,
+  });
+}
+
+export function offersWindowOpen(demand: Demand): boolean {
+  return new Date(demand.offers_close_at).getTime() > Date.now();
+}
+
+export function listOffersForDemand(demandId: string): SupplierOffer[] {
+  return readDB()
+    .offers.filter((o) => o.demand_id === demandId)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
+export function submitOffer(input: {
+  demand_id: string;
+  supplier_org_id: string;
+  carrier_org_id: string;
+  product_price_brl: number;
+  freight_price_brl: number;
+  note?: string;
+}): SupplierOffer {
+  const db = readDB();
+  const dem = db.demands.find((d) => d.id === input.demand_id);
+  if (!dem) throw new Error("demanda não encontrada");
+  if (dem.negotiation_mode !== "OFFERS") throw new Error("demanda não está em modo ofertas");
+  if (dem.status !== "DEMANDA_COLETANDO_OFERTAS") {
+    throw new Error("coleta de ofertas não está aberta");
+  }
+  if (!offersWindowOpen(dem)) throw new Error("prazo de ofertas encerrado");
+
+  const supMatch = db.matches.find(
+    (m) =>
+      m.demand_id === input.demand_id &&
+      m.org_id === input.supplier_org_id &&
+      m.org_kind === "SUPPLIER" &&
+      m.selected,
+  );
+  if (!supMatch) throw new Error("fornecedor não está autorizado nesta demanda");
+
+  const carMatch = db.matches.find(
+    (m) =>
+      m.demand_id === input.demand_id &&
+      m.org_id === input.carrier_org_id &&
+      m.org_kind === "CARRIER" &&
+      m.selected,
+  );
+  if (!carMatch) throw new Error("transportadora deve ser uma das selecionadas pelo comprador");
+
+  const oid = uid("off");
+  const now = new Date().toISOString();
+  patchDB((db2) => {
+    db2.offers = db2.offers.filter(
+      (o) =>
+        !(
+          o.demand_id === input.demand_id &&
+          o.supplier_org_id === input.supplier_org_id &&
+          o.status === "PENDENTE"
+        ),
+    );
+    db2.offers.unshift({
+      id: oid,
+      demand_id: input.demand_id,
+      supplier_org_id: input.supplier_org_id,
+      carrier_org_id: input.carrier_org_id,
+      product_price_brl: Math.round(input.product_price_brl * 100) / 100,
+      freight_price_brl: Math.round(input.freight_price_brl * 100) / 100,
+      note: (input.note ?? "").slice(0, 500),
+      status: "PENDENTE",
+      created_at: now,
+    });
+  });
+  logAudit("OFFER_SUBMITTED", "offer", oid, {
+    demand_id: input.demand_id,
+    supplier_org_id: input.supplier_org_id,
+  });
+  return readDB().offers.find((o) => o.id === oid)!;
+}
+
+export function acceptOffer(offerId: string): Contract | undefined {
+  const db = readDB();
+  const offer = db.offers.find((o) => o.id === offerId);
+  if (!offer || offer.status !== "PENDENTE") throw new Error("oferta inválida");
+  const dem = db.demands.find((d) => d.id === offer.demand_id);
+  if (!dem) throw new Error("demanda não encontrada");
+  if (dem.buyer_id !== getCurrentBuyer().id) throw new Error("apenas o comprador pode aceitar");
+
+  const c = createContractFromWinner(
+    dem.id,
+    offer.supplier_org_id,
+    offer.carrier_org_id,
+    offer.product_price_brl,
+    offer.freight_price_brl,
+    "OFFERS",
+  );
+  if (!c) throw new Error("não foi possível gerar contrato");
+
+  patchDB((db2) => {
+    for (const o of db2.offers) {
+      if (o.demand_id !== dem.id) continue;
+      if (o.id === offerId) o.status = "ACEITA";
+      else if (o.status === "PENDENTE") o.status = "RECUSADA";
+    }
+  });
+  return c;
+}
+
+export function rejectOffer(offerId: string): void {
+  const db = readDB();
+  const offer = db.offers.find((o) => o.id === offerId);
+  if (!offer || offer.status !== "PENDENTE") return;
+  const dem = db.demands.find((d) => d.id === offer.demand_id);
+  if (!dem || dem.buyer_id !== getCurrentBuyer().id) {
+    throw new Error("apenas o comprador pode recusar ofertas");
+  }
+  patchDB((db2) => {
+    const o = db2.offers.find((x) => x.id === offerId);
+    if (o && o.status === "PENDENTE") o.status = "RECUSADA";
+  });
+  logAudit("OFFER_REJECTED", "offer", offerId, { demand_id: offer.demand_id });
 }
 
 export function listAuctionsFor(demandId: string): Auction[] {
@@ -312,26 +481,31 @@ export function endAuction(auctionId: string): Auction | undefined {
   return updated;
 }
 
-export function tryGenerateContract(demandId: string): Contract | undefined {
+export function createContractFromWinner(
+  demandId: string,
+  supplierId: string,
+  carrierId: string,
+  productPriceBrl: number,
+  freightPriceBrl: number,
+  source: "AUCTION" | "OFFERS",
+): Contract | undefined {
   const db = readDB();
-  const auctions = db.auctions.filter((a) => a.demand_id === demandId);
-  if (auctions.length !== 2) return undefined;
-  if (!auctions.every((a) => a.status === "LEILAO_ENCERRADO")) return undefined;
   if (db.contracts.some((c) => c.demand_id === demandId)) {
     return db.contracts.find((c) => c.demand_id === demandId);
   }
-  const product = auctions.find((a) => a.lane === "PRODUCT")!;
-  const freight = auctions.find((a) => a.lane === "FREIGHT")!;
-  const dem = db.demands.find((d) => d.id === demandId)!;
-  const fee = Math.round(product.current_best_brl * 0.011 * 100) / 100;
+  const dem = db.demands.find((d) => d.id === demandId);
+  if (!dem) return undefined;
+  const pp = Math.round(productPriceBrl * 100) / 100;
+  const fp = Math.round(freightPriceBrl * 100) / 100;
+  const fee = Math.round(pp * 0.011 * 100) / 100;
   const contract: Contract = {
     id: uid("ct"),
     demand_id: demandId,
     buyer_id: dem.buyer_id,
-    supplier_id: product.best_bidder_id!,
-    carrier_id: freight.best_bidder_id!,
-    product_price_brl: product.current_best_brl,
-    freight_price_brl: freight.current_best_brl,
+    supplier_id: supplierId,
+    carrier_id: carrierId,
+    product_price_brl: pp,
+    freight_price_brl: fp,
     fee_brl: fee,
     state: "CONTRATO_GERADO",
     payment_state: "PGTO_PENDENTE",
@@ -352,8 +526,32 @@ export function tryGenerateContract(demandId: string): Contract | undefined {
     product_brl: contract.product_price_brl,
     freight_brl: contract.freight_price_brl,
     fee_brl: fee,
+    source,
   });
   return contract;
+}
+
+export function tryGenerateContract(demandId: string): Contract | undefined {
+  const db = readDB();
+  const auctions = db.auctions.filter((a) => a.demand_id === demandId);
+  if (auctions.length !== 2) return undefined;
+  if (!auctions.every((a) => a.status === "LEILAO_ENCERRADO")) return undefined;
+  if (db.contracts.some((c) => c.demand_id === demandId)) {
+    return db.contracts.find((c) => c.demand_id === demandId);
+  }
+  const product = auctions.find((a) => a.lane === "PRODUCT")!;
+  const freight = auctions.find((a) => a.lane === "FREIGHT")!;
+  const sid = product.best_bidder_id;
+  const cid = freight.best_bidder_id;
+  if (!sid || !cid) return undefined;
+  return createContractFromWinner(
+    demandId,
+    sid,
+    cid,
+    product.current_best_brl,
+    freight.current_best_brl,
+    "AUCTION",
+  );
 }
 
 export function getContract(id: string): Contract | undefined {

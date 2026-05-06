@@ -14,10 +14,13 @@ export interface Organization {
   created_at: string;
 }
 
+export type NegotiationMode = "AUCTION" | "OFFERS";
+
 export type DemandStatus =
   | "DEMANDA_CRIADA"
   | "DEMANDA_PUBLICADA"
   | "DEMANDA_COM_MATCHES"
+  | "DEMANDA_COLETANDO_OFERTAS"
   | "DEMANDA_EM_LEILAO"
   | "DEMANDA_ENCERRADA"
   | "DEMANDA_CANCELADA";
@@ -32,9 +35,27 @@ export interface Demand {
   delivery_uf: string;
   deadline: string;
   target_price_brl: number;
+  negotiation_mode: NegotiationMode;
+  /** Janela para envio de ofertas (RFQ); após isso novas ofertas são bloqueadas na POC. */
+  offers_close_at: string;
   status: DemandStatus;
   created_at: string;
+  /** Mantido para compatibilidade; em modo leilão pode espelhar campanha; modo ofertas segue offers_close_at. */
   expires_at: string;
+}
+
+export type OfferStatus = "PENDENTE" | "ACEITA" | "RECUSADA";
+
+export interface SupplierOffer {
+  id: string;
+  demand_id: string;
+  supplier_org_id: string;
+  carrier_org_id: string;
+  product_price_brl: number;
+  freight_price_brl: number;
+  note: string;
+  status: OfferStatus;
+  created_at: string;
 }
 
 export type MatchStatus = "MATCH_PENDENTE" | "MATCH_MUTUO" | "MATCH_RECUSADO" | "MATCH_EXPIRADO";
@@ -137,6 +158,7 @@ export interface MockDB {
   matches: Match[];
   auctions: Auction[];
   bids: Bid[];
+  offers: SupplierOffer[];
   contracts: Contract[];
   audit: AuditEntry[];
   current_buyer_id: string;

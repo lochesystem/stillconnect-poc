@@ -9,20 +9,22 @@ Plataforma B2B de negociação, pagamento e logística de aço com micro-leilão
 ## O que tem aqui
 
 - **`EVOLUCAO_STILLCONNECT.md`** — plano estratégico completo (tese, MVP, roadmap, arquitetura, modelo de negócio, GTM, defensabilidade, métricas, riscos, próximos 90 dias).
-- **`poc/frontend/`** — POC funcional, client-side, com 10 telas + tour de 60 segundos.
+- **`poc/frontend/`** — POC funcional, client-side, com telas principais + tour de ~60 segundos.
 
 ## Telas da POC
 
 1. Home (pitch + tour)
 2. Painel do Comprador
-3. Criar demanda (preço-alvo confidencial)
+3. Criar demanda (preço-alvo confidencial + modo leilão ou RFQ)
 4. Detalhe da demanda + seleção de participantes
 5. **Sala de leilão ao vivo** (produto + frete em paralelo, soft close, lances do investidor + bots)
-6. Marketplace anônimo (visão Fornecedor)
-7. Contrato + FSM visual
-8. Escrow + Trava Fiscal NF×escrow
-9. Logística + janela 72h + split automático
-10. Dashboard Admin + Business Heartbeat + audit log
+6. **Revisão de ofertas (RFQ)** — comprador aceita/recusa propostas (mesmo pós-contrato que o leilão)
+7. **Envio de oferta** — fornecedor convidado (marketplace → formulário)
+8. Marketplace anônimo (visão Fornecedor)
+9. Contrato + FSM visual
+10. Escrow + Trava Fiscal NF×escrow
+11. Logística + janela 72h + split automático
+12. Dashboard Admin + Business Heartbeat + audit log
 
 ## Rodar localmente
 
@@ -56,6 +58,8 @@ URL pública (após primeiro deploy): `https://<user>.github.io/stillconnect-poc
 
 ## Conceitos da Bíblia Técnica implementados
 
+- **Micro-leilão reverso** é o modo **canônico** da especificação (competição em tempo real, duas pistas produto + frete).
+- **Coleta de ofertas (RFQ)** é um **modo alternativo de POC**: oferta fechada com produto + frete + transportadora entre as já selecionadas; ao aceitar, o mesmo fluxo **Contrato → Escrow → Logística** é reutilizado sem duplicar FSM.
 - FSM rigorosa do contrato (`CONTRATO_GERADO → ACEITO → ATIVO → ENTREGUE → CONCLUIDO`)
 - Trava Fiscal com tolerância R$ 1,00 (NF×escrow)
 - Token de carga via SHA-256

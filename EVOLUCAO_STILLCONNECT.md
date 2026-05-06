@@ -477,6 +477,10 @@ Nada é pronto se:
 8. **Split automático** no fechamento: dinheiro distribuído entre Fornecedor + Transportadora + Still
 9. **Dashboard Admin** com audit log e métricas Business Heartbeat
 
+### Modo alternativo na POC: coleta de ofertas (RFQ)
+
+Para demos em que **“oferta fechada + aceite pelo comprador”** comunica melhor do que competição em tempo real, a POC inclui um modo **RFQ** paralelo ao fluxo principal: o comprador define uma **janela em dias**, convida fornecedores e transportadoras (mesma regra mínima 2+2), recebe **produto + frete + escolha de transportadora entre as aprovadas**, e ao aceitar uma proposta o sistema materializa o **mesmo contrato e o mesmo pós-contrato** (escrow, trava fiscal, logística) que no leilão. **O micro-leilão reverso permanece o modo canônico** da Bíblia Técnica; o RFQ é conveniência de POC, não substituto normativo do produto-alvo.
+
 ### O que a POC NÃO faz
 
 - KYB real (apenas mock visual com badge "ATIVO")

@@ -4,7 +4,7 @@ export const tourSteps: TourStep[] = [
   {
     id: "intro",
     title: "Still Connect — infraestrutura B2B do mercado de aço",
-    body: "Em 60 segundos você vai ver: demanda anônima, micro-leilão reverso ao vivo, escrow + trava fiscal, logística com prova criptográfica e split automático.",
+    body: "Em 60 segundos você vai ver: demanda anônima, micro-leilão reverso ao vivo, escrow + trava fiscal, logística com prova criptográfica e split automático. (Há também modo manual coleta de ofertas — RFQ — ao criar uma demanda, para demos alternativas.)",
     path: "/",
     duration: 4500,
   },

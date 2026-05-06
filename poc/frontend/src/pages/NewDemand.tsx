@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, EyeOff, ShieldCheck } from "lucide-react";
 import { createDemand } from "../mock/services";
 import { brl } from "../lib/format";
+import type { NegotiationMode } from "../mock/types";
 
 export default function NewDemand() {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ export default function NewDemand() {
   const [uf, setUf] = useState("SP");
   const [deadline, setDeadline] = useState(7);
   const [target, setTarget] = useState(140000);
+  const [negotiationMode, setNegotiationMode] = useState<NegotiationMode>("AUCTION");
+  const [offerWindowDays, setOfferWindowDays] = useState(7);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,6 +27,8 @@ export default function NewDemand() {
       delivery_uf: uf,
       deadline_days: deadline,
       target_price_brl: target,
+      negotiation_mode: negotiationMode,
+      offer_window_days: offerWindowDays,
     });
     navigate(`/buyer/demand/${dem.id}`);
   }
@@ -111,6 +116,60 @@ export default function NewDemand() {
           />
         </Field>
 
+        <div className="rounded-lg border border-steel-200/80 bg-steel-50/50 p-4 space-y-3">
+          <div className="text-xs font-semibold text-steel-700 uppercase tracking-wide">
+            Modo de negociação
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className="flex items-start gap-2 cursor-pointer rounded-md border border-steel-200 bg-white px-3 py-2 flex-1">
+              <input
+                type="radio"
+                name="neg-mode"
+                className="mt-1 accent-molten-600"
+                checked={negotiationMode === "AUCTION"}
+                onChange={() => setNegotiationMode("AUCTION")}
+              />
+              <span>
+                <span className="font-semibold text-steel-900">Micro-leilão reverso</span>
+                <span className="block text-xs text-steel-500 mt-0.5">
+                  Modo canônico da especificação: produto e frete em salas paralelas ao vivo.
+                </span>
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer rounded-md border border-steel-200 bg-white px-3 py-2 flex-1">
+              <input
+                type="radio"
+                name="neg-mode"
+                className="mt-1 accent-molten-600"
+                checked={negotiationMode === "OFFERS"}
+                onChange={() => setNegotiationMode("OFFERS")}
+              />
+              <span>
+                <span className="font-semibold text-steel-900">Coleta de ofertas (RFQ)</span>
+                <span className="block text-xs text-steel-500 mt-0.5">
+                  Fornecedores enviam preço produto + frete; você aceita uma proposta (POC alternativa).
+                </span>
+              </span>
+            </label>
+          </div>
+          {negotiationMode === "OFFERS" ? (
+            <Field label="Janela para ofertas (dias)">
+              <input
+                type="number"
+                className="input max-w-[140px]"
+                value={offerWindowDays}
+                onChange={(e) => setOfferWindowDays(Number(e.target.value))}
+                min={1}
+                max={90}
+                required
+              />
+              <p className="text-[11px] text-steel-500 mt-1">
+                Após abrir a coleta, fornecedores selecionados podem enviar ou atualizar oferta até este prazo.
+              </p>
+            </Field>
+          ) : null}
+        </div>
+
         <div
           className="rounded-lg border-2 border-dashed border-molten-300 bg-molten-50/40 p-4"
           data-tour="field-target-area"
@@ -145,7 +204,7 @@ export default function NewDemand() {
           <ShieldCheck className="w-4 h-4" />
           <span>
             Dados sensíveis são cifrados antes de gravar. Demanda publicada em modo
-            anônimo. Identidade revelada apenas após o leilão.
+            anônimo. Identidade revelada após abrir negociação (leilão ou coleta de ofertas).
           </span>
         </div>
 

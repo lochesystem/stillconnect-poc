@@ -9,6 +9,7 @@ const STATUS_LABELS: Record<Demand["status"], { label: string; tone: string }> =
   DEMANDA_CRIADA: { label: "Criada", tone: "badge-neutral" },
   DEMANDA_PUBLICADA: { label: "Publicada", tone: "badge-info" },
   DEMANDA_COM_MATCHES: { label: "Com matches", tone: "badge-warning" },
+  DEMANDA_COLETANDO_OFERTAS: { label: "Coletando ofertas", tone: "badge-info" },
   DEMANDA_EM_LEILAO: { label: "Em leilão", tone: "badge-warning" },
   DEMANDA_ENCERRADA: { label: "Encerrada", tone: "badge-success" },
   DEMANDA_CANCELADA: { label: "Cancelada", tone: "badge-danger" },
@@ -144,6 +145,9 @@ export default function Buyer() {
 function routeFor(d: Demand, db: MockDB): string {
   const contract = db.contracts.find((c) => c.demand_id === d.id);
   if (contract) return `/contract/${contract.id}`;
+  if (d.negotiation_mode === "OFFERS" && d.status === "DEMANDA_COLETANDO_OFERTAS") {
+    return `/buyer/demand/${d.id}/offers`;
+  }
   const auctions = db.auctions.filter((a) => a.demand_id === d.id);
   if (auctions.length === 2) return `/auction/${d.id}`;
   return `/buyer/demand/${d.id}`;

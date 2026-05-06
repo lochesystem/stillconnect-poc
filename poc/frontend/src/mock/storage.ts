@@ -1,4 +1,4 @@
-import type { MockDB } from "./types";
+import type { Demand, MockDB, NegotiationMode } from "./types";
 
 const STORAGE_KEY = "stillconnect.poc.db.v1";
 
@@ -8,6 +8,7 @@ const empty: MockDB = {
   matches: [],
   auctions: [],
   bids: [],
+  offers: [],
   contracts: [],
   audit: [],
   current_buyer_id: "",
@@ -15,11 +16,36 @@ const empty: MockDB = {
   tenant_key_b64: "",
 };
 
+function migrateParsed(db: MockDB): boolean {
+  let dirty = false;
+  if (!Array.isArray(db.offers)) {
+    db.offers = [];
+    dirty = true;
+  }
+  for (const d of db.demands) {
+    const dem = d as Demand & { negotiation_mode?: NegotiationMode; offers_close_at?: string };
+    if (!dem.negotiation_mode) {
+      dem.negotiation_mode = "AUCTION";
+      dirty = true;
+    }
+    if (!dem.offers_close_at) {
+      dem.offers_close_at = dem.expires_at || new Date().toISOString();
+      dirty = true;
+    }
+  }
+  return dirty;
+}
+
 export function readDB(): MockDB {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...empty };
-    return JSON.parse(raw) as MockDB;
+    const db = JSON.parse(raw) as MockDB;
+    if (migrateParsed(db)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+      notify();
+    }
+    return db;
   } catch {
     return { ...empty };
   }
