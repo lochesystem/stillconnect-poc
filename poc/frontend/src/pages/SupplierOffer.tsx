@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Package, Truck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Package, Target, Truck } from "lucide-react";
 import { useDB } from "../components/useDB";
 import { listMatchesFor, offersWindowOpen, submitOffer } from "../mock/services";
 import { brl, dt, kg } from "../lib/format";
@@ -111,6 +111,17 @@ export default function SupplierOffer() {
             Ofertas até <strong>{dt(demand.offers_close_at)}</strong>
             {!windowOk ? " — prazo encerrado." : ""}
           </p>
+          <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50/70 px-4 py-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-900 uppercase tracking-wide">
+              <Target className="w-3.5 h-3.5" />
+              Preço-alvo do comprador (RFQ)
+            </div>
+            <div className="font-mono text-xl font-bold text-steel-900 mt-1">{brl(demand.target_price_brl)}</div>
+            <p className="text-xs text-steel-600 mt-2 leading-relaxed">
+              Diferente do leilão, neste modo o comprador informa esta referência para você montar a proposta (valor do produto + frete).{" "}
+              Os valores sugeridos abaixo são apenas ponto de partida — ajuste como preferir.
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-steel-200/60">

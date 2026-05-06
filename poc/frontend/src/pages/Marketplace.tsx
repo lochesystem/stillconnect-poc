@@ -26,7 +26,10 @@ export default function Marketplace() {
           {supplier?.fantasia || "Fornecedor"}
         </h1>
         <p className="text-sm text-steel-600 mt-1">
-          Você vê requisitos. Não vê quem é o comprador. Não vê preço-alvo. Você decide se entra na competição.
+          Você vê requisitos e não vê quem é o comprador.{" "}
+          <strong className="font-medium text-steel-800">Em leilão</strong>, o preço-alvo permanece oculto;{" "}
+          <strong className="font-medium text-steel-800">em RFQ</strong>, o comprador informa referência de orçamento para
+          quem for convidado a ofertar.
         </p>
       </header>
 
@@ -97,12 +100,19 @@ export default function Marketplace() {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between gap-2 pt-3 border-t border-steel-200/60 flex-wrap">
-                  <div className="text-xs text-steel-500">
-                    Preço-alvo:{" "}
-                    <span className="font-mono tracking-widest text-steel-400 select-none">
-                      •••••
-                    </span>{" "}
-                    (oculto)
+                  <div className="text-xs">
+                    {d.negotiation_mode === "OFFERS" ? (
+                      <>
+                        <span className="text-steel-600">Preço-alvo (referência RFQ): </span>
+                        <span className="font-mono font-semibold text-steel-900">{brl(d.target_price_brl)}</span>
+                      </>
+                    ) : (
+                      <span className="text-steel-500">
+                        Preço-alvo:{" "}
+                        <span className="font-mono tracking-widest text-steel-400 select-none">•••••</span>{" "}
+                        (oculto — modo leilão)
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap justify-end">
                     {selected ? (
@@ -126,8 +136,10 @@ export default function Marketplace() {
                 <div className="mt-3 text-[11px] text-steel-500 italic flex items-start gap-1">
                   <ShieldQuestion className="w-3 h-3 mt-0.5 shrink-0" />
                   {rfqHint
-                    ? "Coleta de ofertas: se você foi selecionado pelo comprador, pode propor produto + frete até o prazo indicado na tela de envio."
-                    : "Identidade do comprador é revelada após o início do leilão ou da coleta de ofertas. Negociação ocorre em fluxo guiado."}
+                    ? "RFQ: o preço-alvo acima é a referência divulgada pelo comprador. Se você foi selecionado, envie produto + frete até o prazo na tela de oferta."
+                    : d.negotiation_mode === "OFFERS"
+                      ? "Demanda em modo RFQ: preço-alvo visível como referência de orçamento (diferente do leilão, em que o valor fica oculto)."
+                      : "Identidade do comprador é revelada após o início do leilão. No leilão, o preço-alvo não é mostrado ao mercado."}
                 </div>
               </article>
             );
@@ -141,8 +153,9 @@ export default function Marketplace() {
         </div>
         <p className="text-sm leading-relaxed">
           Mercado anônimo evita conluio entre fornecedores e captura de spread por
-          relacionamento. Quando o leilão ou a coleta de ofertas começa, todos competem em condições
-          mais parecidas por preço e prazo — não por quem conhece quem. Estimativa interna:{" "}
+          relacionamento. No <strong className="text-steel-200">leilão reverso</strong>, o preço-alvo segue confidencial até o fim da competição.
+          Na <strong className="text-steel-200">coleta de ofertas (RFQ)</strong>, o comprador pode divulgar referência de orçamento para alinhar propostas.
+          Estimativa interna:{" "}
           <span className="text-emerald-400 font-mono font-semibold">
             redução média de 4,2 p.p.
           </span>{" "}
