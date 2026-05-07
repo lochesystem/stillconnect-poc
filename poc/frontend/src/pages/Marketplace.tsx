@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
-import { LayoutGrid, MapPin, Package, ShieldQuestion, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { LayoutGrid, MapPin, Package, ShieldQuestion, ArrowRight, MessageCircle } from "lucide-react";
 import { useDB } from "../components/useDB";
+import NegotiationChatModal from "../components/NegotiationChatModal";
 import { listMatchesFor } from "../mock/services";
 import { brl, dt, kg, relTime } from "../lib/format";
 
 export default function Marketplace() {
   const db = useDB();
+  const [chatOfferId, setChatOfferId] = useState<string | null>(null);
 
   const supplier = db.orgs.find((o) => o.id === db.current_supplier_id);
   const visibleDemands = db.demands.filter(
@@ -58,6 +61,12 @@ export default function Marketplace() {
               );
             const rfqHint =
               d.negotiation_mode === "OFFERS" && d.status === "DEMANDA_COLETANDO_OFERTAS";
+            const myPendingOffer = db.offers.find(
+              (o) =>
+                o.demand_id === d.id &&
+                o.supplier_org_id === db.current_supplier_id &&
+                o.status === "PENDENTE",
+            );
             return (
               <article
                 key={d.id}
@@ -116,10 +125,22 @@ export default function Marketplace() {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap justify-end">
                     {selected ? (
-                      <Link to={`/supplier/offer/${d.id}`} className="btn-primary text-xs py-1.5 px-3">
-                        Enviar oferta
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      <>
+                        <Link to={`/supplier/offer/${d.id}`} className="btn-primary text-xs py-1.5 px-3">
+                          Enviar oferta
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                        {myPendingOffer ? (
+                          <button
+                            type="button"
+                            onClick={() => setChatOfferId(myPendingOffer.id)}
+                            className="btn-secondary text-xs py-1.5 px-3"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            Negociar
+                          </button>
+                        ) : null}
+                      </>
                     ) : null}
                     {!rfqHint ? (
                       <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded font-semibold">
@@ -162,6 +183,12 @@ export default function Marketplace() {
           no spread vs cotação telefônica.
         </p>
       </div>
+
+      <NegotiationChatModal
+        open={chatOfferId !== null}
+        onOpenChange={(next) => !next && setChatOfferId(null)}
+        offerId={chatOfferId ?? ""}
+      />
     </div>
   );
 }

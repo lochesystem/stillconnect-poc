@@ -7,9 +7,11 @@ import {
   Check,
   Clock,
   FileSignature,
+  MessageCircle,
   X,
 } from "lucide-react";
 import { useDB } from "../components/useDB";
+import NegotiationChatModal from "../components/NegotiationChatModal";
 import { acceptOffer, listOffersForDemand, offersWindowOpen, rejectOffer } from "../mock/services";
 import { brl, dt, kg } from "../lib/format";
 
@@ -19,6 +21,7 @@ export default function BuyerOffers() {
   const db = useDB();
   const demand = db.demands.find((d) => d.id === id);
   const [now, setNow] = useState(Date.now());
+  const [chatOfferId, setChatOfferId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -136,7 +139,16 @@ export default function BuyerOffers() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setChatOfferId(o.id)}
+                      className="btn-secondary text-xs"
+                      disabled={hasContract}
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      Negociar
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleReject(o.id)}
@@ -196,6 +208,12 @@ export default function BuyerOffers() {
           </button>
         </div>
       )}
+
+      <NegotiationChatModal
+        open={chatOfferId !== null}
+        onOpenChange={(next) => !next && setChatOfferId(null)}
+        offerId={chatOfferId ?? ""}
+      />
     </div>
   );
 }

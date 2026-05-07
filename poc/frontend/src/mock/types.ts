@@ -58,6 +58,15 @@ export interface SupplierOffer {
   created_at: string;
 }
 
+/** Mensagens de chat entre comprador e fornecedor por oferta (RFQ), POC localStorage. */
+export interface NegotiationMessage {
+  id: string;
+  offer_id: string;
+  sender_org_id: string;
+  body: string;
+  created_at: string;
+}
+
 export type MatchStatus = "MATCH_PENDENTE" | "MATCH_MUTUO" | "MATCH_RECUSADO" | "MATCH_EXPIRADO";
 
 export interface Match {
@@ -159,6 +168,7 @@ export interface MockDB {
   auctions: Auction[];
   bids: Bid[];
   offers: SupplierOffer[];
+  negotiation_messages: NegotiationMessage[];
   contracts: Contract[];
   audit: AuditEntry[];
   current_buyer_id: string;

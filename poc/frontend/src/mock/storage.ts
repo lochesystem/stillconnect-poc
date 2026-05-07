@@ -9,6 +9,7 @@ const empty: MockDB = {
   auctions: [],
   bids: [],
   offers: [],
+  negotiation_messages: [],
   contracts: [],
   audit: [],
   current_buyer_id: "",
@@ -20,6 +21,10 @@ function migrateParsed(db: MockDB): boolean {
   let dirty = false;
   if (!Array.isArray(db.offers)) {
     db.offers = [];
+    dirty = true;
+  }
+  if (!Array.isArray(db.negotiation_messages)) {
+    db.negotiation_messages = [];
     dirty = true;
   }
   for (const d of db.demands) {

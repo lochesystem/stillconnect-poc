@@ -119,6 +119,7 @@ export async function reseed(): Promise<void> {
     auctions: [],
     bids: [],
     offers: [],
+    negotiation_messages: [],
     contracts: [],
     audit: [
       {

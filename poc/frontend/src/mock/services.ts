@@ -6,6 +6,7 @@ import type {
   Contract,
   Demand,
   Match,
+  NegotiationMessage,
   Organization,
   SupplierOffer,
 } from "./types";
@@ -363,6 +364,73 @@ export function rejectOffer(offerId: string): void {
     if (o && o.status === "PENDENTE") o.status = "RECUSADA";
   });
   logAudit("OFFER_REJECTED", "offer", offerId, { demand_id: offer.demand_id });
+}
+
+export function listNegotiationMessages(offerId: string): NegotiationMessage[] {
+  return readDB()
+    .negotiation_messages.filter((m) => m.offer_id === offerId)
+    .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+}
+
+/** Permite novos envios; histórico continua visível quando false. */
+export function canSendNegotiationMessage(offerId: string): boolean {
+  const db = readDB();
+  const offer = db.offers.find((o) => o.id === offerId);
+  if (!offer || offer.status !== "PENDENTE") return false;
+  if (db.contracts.some((c) => c.demand_id === offer.demand_id)) return false;
+  const dem = db.demands.find((d) => d.id === offer.demand_id);
+  if (!dem || dem.negotiation_mode !== "OFFERS") return false;
+  if (dem.status !== "DEMANDA_COLETANDO_OFERTAS") return false;
+  return true;
+}
+
+export function sendNegotiationMessage(offerId: string, body: string): NegotiationMessage {
+  const trimmed = body.trim().slice(0, 800);
+  if (!trimmed) throw new Error("escreva uma mensagem antes de enviar");
+
+  if (!canSendNegotiationMessage(offerId)) {
+    throw new Error("chat encerrado para esta oferta");
+  }
+
+  const db = readDB();
+  const offer = db.offers.find((o) => o.id === offerId)!;
+  const dem = db.demands.find((d) => d.id === offer.demand_id)!;
+
+  const buyerId = db.current_buyer_id;
+  const supplierSession = db.current_supplier_id;
+
+  let senderOrgId: string | null = null;
+  if (buyerId === dem.buyer_id) senderOrgId = buyerId;
+  else if (supplierSession === offer.supplier_org_id) senderOrgId = supplierSession;
+
+  if (!senderOrgId) {
+    throw new Error("apenas o comprador ou o fornecedor desta oferta podem enviar mensagens");
+  }
+
+  const mid = uid("negmsg");
+  const now = new Date().toISOString();
+  const msg: NegotiationMessage = {
+    id: mid,
+    offer_id: offerId,
+    sender_org_id: senderOrgId,
+    body: trimmed,
+    created_at: now,
+  };
+
+  patchDB((db2) => {
+    db2.negotiation_messages.push(msg);
+  });
+
+  const org = getOrg(senderOrgId);
+  logAudit(
+    "NEGOTIATION_MESSAGE_SENT",
+    "negotiation_message",
+    mid,
+    { offer_id: offerId, demand_id: offer.demand_id },
+    org?.fantasia ?? senderOrgId,
+  );
+
+  return msg;
 }
 
 export function listAuctionsFor(demandId: string): Auction[] {
