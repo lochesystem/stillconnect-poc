@@ -12,12 +12,15 @@ interface NegotiationChatModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   offerId: string;
+  /** Quem abriu o modal — no mock coexistem current_buyer_id e current_supplier_id; sem isto o remetente ficaria errado. */
+  actingAs: "buyer" | "supplier";
 }
 
 export default function NegotiationChatModal({
   open,
   onOpenChange,
   offerId,
+  actingAs,
 }: NegotiationChatModalProps) {
   const db = useDB();
   const [draft, setDraft] = useState("");
@@ -54,7 +57,7 @@ export default function NegotiationChatModal({
   function handleSend(e: React.FormEvent) {
     e.preventDefault();
     try {
-      sendNegotiationMessage(offerId, draft);
+      sendNegotiationMessage(offerId, draft, actingAs);
       setDraft("");
     } catch (err) {
       alert((err as Error).message);

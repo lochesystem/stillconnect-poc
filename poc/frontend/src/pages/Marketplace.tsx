@@ -188,6 +188,7 @@ export default function Marketplace() {
         open={chatOfferId !== null}
         onOpenChange={(next) => !next && setChatOfferId(null)}
         offerId={chatOfferId ?? ""}
+        actingAs="supplier"
       />
     </div>
   );

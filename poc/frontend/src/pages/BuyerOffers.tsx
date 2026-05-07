@@ -213,6 +213,7 @@ export default function BuyerOffers() {
         open={chatOfferId !== null}
         onOpenChange={(next) => !next && setChatOfferId(null)}
         offerId={chatOfferId ?? ""}
+        actingAs="buyer"
       />
     </div>
   );

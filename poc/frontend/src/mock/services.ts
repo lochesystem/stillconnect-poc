@@ -384,7 +384,11 @@ export function canSendNegotiationMessage(offerId: string): boolean {
   return true;
 }
 
-export function sendNegotiationMessage(offerId: string, body: string): NegotiationMessage {
+export function sendNegotiationMessage(
+  offerId: string,
+  body: string,
+  actingAs: "buyer" | "supplier",
+): NegotiationMessage {
   const trimmed = body.trim().slice(0, 800);
   if (!trimmed) throw new Error("escreva uma mensagem antes de enviar");
 
@@ -400,11 +404,16 @@ export function sendNegotiationMessage(offerId: string, body: string): Negotiati
   const supplierSession = db.current_supplier_id;
 
   let senderOrgId: string | null = null;
-  if (buyerId === dem.buyer_id) senderOrgId = buyerId;
-  else if (supplierSession === offer.supplier_org_id) senderOrgId = supplierSession;
-
-  if (!senderOrgId) {
-    throw new Error("apenas o comprador ou o fornecedor desta oferta podem enviar mensagens");
+  if (actingAs === "supplier") {
+    if (supplierSession !== offer.supplier_org_id) {
+      throw new Error("sessão atual não é o fornecedor desta oferta");
+    }
+    senderOrgId = supplierSession;
+  } else {
+    if (buyerId !== dem.buyer_id) {
+      throw new Error("sessão atual não é o comprador desta demanda");
+    }
+    senderOrgId = buyerId;
   }
 
   const mid = uid("negmsg");
