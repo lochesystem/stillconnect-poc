@@ -43,7 +43,7 @@ Definir a baseline técnica executável para o **MVP** alinhado ao §4 do EVOLUC
 ### Fora do âmbito deste documento
 
 - Escolha final de fornecedor cloud ou banco (apresentam-se **opções** e critérios).
-- Código de infra-as-code (Terraform, etc.).
+- Código de infra-as-code (**OpenTofu**, compatível com ecossistema Terraform/HCL).
 - Duplicação de narrativa estratégica (GTM, modelo de receita detalhado) — ver EVOLUCAO §7–§8.
 
 ### Critérios de qualidade do MVP técnico
@@ -252,8 +252,8 @@ Objectivo: **isolamento forte** entre UI, código de aplicação servidor e infr
 | Repositório sugerido | Conteúdo | Deploy típico | Notas de isolamento |
 |---------------------|----------|----------------|---------------------|
 | **`steelconnect-web`** | Frontend PWA/SPA (evolução da POC Vite/React); assets estáticos; sem segredos cloud sensíveis | GitHub Pages, S3+CloudFront, ou Netlify/Vercel conforme estratégia | CI só build/test/lint front; env públicos (`VITE_*`) ou runtime config injetada |
-| **`steelconnect-api`** | Monólito modular MVP + worker assíncrono (outbox, webhooks banco); OpenAPI/public docs opcional em `/docs` | Container → ECS/K8s/App Runner; migrações SQL versionadas no mesmo repo ou pasta `migrations/` | Secrets via GitHub Environments (`staging`/`production`); **nunca** estado Terraform aqui |
-| **`steelconnect-infra`** | Terraform ou OpenTofu: VPC, RDS, Redis, IAM, buckets, observabilidade base, roles CI→cloud | `terraform plan` em PR; `apply` gated manual ou pipeline dedicado | Estado remoto (ex.: S3 + lock DynamoDB); **branch protection** só equipa platform/SRE; PAT/cloud roles separados dos repos app |
+| **`steelconnect-api`** | Monólito modular MVP + worker assíncrono (outbox, webhooks banco); OpenAPI/public docs opcional em `/docs` | Container → ECS/K8s/App Runner; migrações SQL versionadas no mesmo repo ou pasta `migrations/` | Secrets via GitHub Environments (`staging`/`production`); **nunca** estado IaC (OpenTofu) aqui |
+| **`steelconnect-infra`** | **OpenTofu**: VPC, RDS, Redis, IAM, buckets, observabilidade base, roles CI→cloud | `tofu plan` em PR; `apply` gated manual ou pipeline dedicado | Estado remoto (ex.: S3 + lock DynamoDB); **branch protection** só equipa platform/SRE; PAT/cloud roles separados dos repos app |
 
 **Contratos entre repos:** versões de API estáveis (OpenAPI); tags semver na API para o front fixar compatibilidade; variáveis de ambiente documentadas num `.env.example` no `steelconnect-api` e referenciadas no README do `steelconnect-web`.
 
@@ -268,7 +268,7 @@ OWNER=lochesystem
 
 gh repo create "${OWNER}/steelconnect-web"  --private --description "Steel Connect — frontend (PWA)"
 gh repo create "${OWNER}/steelconnect-api"   --private --description "Steel Connect — API monólito + workers"
-gh repo create "${OWNER}/steelconnect-infra" --private --description "Steel Connect — IaC (Terraform/OpenTofu)"
+gh repo create "${OWNER}/steelconnect-infra" --private --description "Steel Connect — IaC (OpenTofu)"
 ```
 
 Para outra organização ou utilizador, alterar apenas `OWNER=`.
