@@ -407,7 +407,7 @@ function Conclusion({
           value={contract.product_price_brl}
         />
         <SplitCard label={carrierName} role="Transportadora" value={contract.freight_price_brl} />
-        <SplitCard label="Still Connect" role="Take rate" value={contract.fee_brl} />
+        <SplitCard label="Steel Connect" role="Take rate" value={contract.fee_brl} />
       </div>
 
       <div className="mt-4 text-xs text-emerald-200">

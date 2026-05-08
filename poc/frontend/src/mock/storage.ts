@@ -1,6 +1,8 @@
 import type { Demand, MockDB, NegotiationMode } from "./types";
 
-const STORAGE_KEY = "stillconnect.poc.db.v1";
+/** Chave nova; dados antigos em `stillconnect.poc.db.v1` são migrados na primeira leitura. */
+const STORAGE_KEY = "steelconnect.poc.db.v1";
+const LEGACY_STORAGE_KEY = "stillconnect.poc.db.v1";
 
 const empty: MockDB = {
   orgs: [],
@@ -43,7 +45,14 @@ function migrateParsed(db: MockDB): boolean {
 
 export function readDB(): MockDB {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (raw) {
+        localStorage.setItem(STORAGE_KEY, raw);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+    }
     if (!raw) return { ...empty };
     const db = JSON.parse(raw) as MockDB;
     if (migrateParsed(db)) {
@@ -71,6 +80,7 @@ export function patchDB(patch: (db: MockDB) => MockDB | void): MockDB {
 
 export function clearDB(): void {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
   notify();
 }
 

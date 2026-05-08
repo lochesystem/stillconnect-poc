@@ -47,7 +47,7 @@ export default function Home() {
           </div>
 
           <blockquote className="mt-10 text-sm italic text-steel-300 border-l-2 border-molten-500 pl-3 max-w-xl">
-            "A Still Connect parece simples porque o sistema faz o trabalho pesado."
+            "A Steel Connect parece simples porque o sistema faz o trabalho pesado."
           </blockquote>
         </div>
       </section>
@@ -92,7 +92,7 @@ export default function Home() {
             n={6}
             title="Janela 72h e split"
             icon={CheckCircle2}
-            text="Silêncio = aceite. Pagamento liberado em split automático para fornecedor + transportadora + Still."
+            text="Silêncio = aceite. Pagamento liberado em split automático para fornecedor + transportadora + Steel Connect."
           />
         </div>
       </section>

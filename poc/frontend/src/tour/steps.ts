@@ -3,7 +3,7 @@ import type { TourStep } from "./types";
 export const tourSteps: TourStep[] = [
   {
     id: "intro",
-    title: "Still Connect — infraestrutura B2B do mercado de aço",
+    title: "Steel Connect — infraestrutura B2B do mercado de aço",
     body: "Em 60 segundos você vai ver: demanda anônima, micro-leilão reverso ao vivo, escrow + trava fiscal, logística com prova criptográfica e split automático. (Há também modo manual coleta de ofertas — RFQ — ao criar uma demanda, para demos alternativas.)",
     path: "/",
     duration: 4500,
@@ -123,7 +123,7 @@ export const tourSteps: TourStep[] = [
   {
     id: "concluded",
     title: "Split automático em uma transação",
-    body: "Fornecedor + Transportadora + Still recebem. Take rate efetivo de ~1,1% sobre GMV.",
+    body: "Fornecedor + Transportadora + Steel Connect recebem. Take rate efetivo de ~1,1% sobre GMV.",
     duration: 5000,
   },
   {

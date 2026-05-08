@@ -1,15 +1,20 @@
-# Still Connect — POC
+# Steel Connect — POC
 
 Plataforma B2B de negociação, pagamento e logística de aço com micro-leilão reverso, escrow e prova criptográfica de entrega.
 
-> **Frase-guia:** *"A Still Connect parece simples porque o sistema faz o trabalho pesado."*
+> **Frase-guia:** *"A Steel Connect parece simples porque o sistema faz o trabalho pesado."*
 
 ---
 
 ## O que tem aqui
 
-- **`EVOLUCAO_STILLCONNECT.md`** — plano estratégico completo (tese, MVP, roadmap, arquitetura, modelo de negócio, GTM, defensabilidade, métricas, riscos, próximos 90 dias).
+- **`EVOLUCAO_STEELCONNECT.md`** — plano estratégico completo (tese, MVP, roadmap, arquitetura, modelo de negócio, GTM, defensabilidade, métricas, riscos, próximos 90 dias).
+- **`MVP_ENGENHARIA.md`** — engenharia MVP (inclui **3 repositórios GitHub**: web / api / infra).
 - **`poc/frontend/`** — POC funcional, client-side, com telas principais + tour de ~60 segundos.
+
+## Marca e deploy (GitHub Pages)
+
+O nome da plataforma é **Steel Connect**. O caminho `base` do Vite na build (`poc/frontend/vite.config.ts`) deve coincidir com o **nome do repositório** no GitHub Pages (ex.: `/stillconnect-poc/`). Ao renomear o repositório, atualize esse `base` para o novo slug.
 
 ## Telas da POC
 
@@ -46,7 +51,7 @@ npm run preview
 
 GitHub Actions deploya automaticamente em GitHub Pages a cada push na `main`. Ver `.github/workflows/deploy.yml`.
 
-URL pública (após primeiro deploy): `https://<user>.github.io/stillconnect-poc/`
+URL pública (exemplo): `https://<user>.github.io/stillconnect-poc/` — depende do slug do repo no GitHub.
 
 ## Stack
 

@@ -56,7 +56,7 @@ export default function Admin() {
     <div className="space-y-6">
       <header>
         <div className="flex items-center gap-2 text-sm text-steel-500 font-medium">
-          <Cog className="w-4 h-4" /> Admin Still Connect · Operations
+          <Cog className="w-4 h-4" /> Admin Steel Connect · Operations
         </div>
         <h1 className="text-2xl font-bold text-steel-900 mt-0.5">
           Visão de plataforma · Business Heartbeat

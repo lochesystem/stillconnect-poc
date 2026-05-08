@@ -1,12 +1,12 @@
-# Still Connect — Plano de Evolução Estratégica
+# Steel Connect — Plano de Evolução Estratégica
 
-> **Documento de trabalho** baseado no One-Pager (Jornada UX) e na Bíblia Técnica oficial. Objetivo: traduzir uma tese forte em um produto financiável, defensável e auditável — sem perder a frase-guia: *"A Still Connect parece simples porque o sistema faz o trabalho pesado."*
+> **Documento de trabalho** baseado no One-Pager (Jornada UX) e na Bíblia Técnica oficial. Objetivo: traduzir uma tese forte em um produto financiável, defensável e auditável — sem perder a frase-guia: *"A Steel Connect parece simples porque o sistema faz o trabalho pesado."*
 
 ---
 
 ## Sumário
 
-1. [O que é Still Connect (em uma frase)](#1-resumo)
+1. [O que é Steel Connect (em uma frase)](#1-resumo)
 2. [A Tese — por que isso existe](#2-tese)
 3. [Hipóteses críticas a validar](#3-hipoteses)
 4. [MVP — o menor produto que prova a tese](#4-mvp)
@@ -24,7 +24,7 @@
 
 ## 1. Resumo
 
-> **Still Connect é uma infraestrutura de mercado B2B financeiro-industrial** que conecta compradores, fornecedores e transportadoras de aço através de **micro-leilão reverso com escrow** — entregando ao usuário uma experiência simples de "estou negociando", enquanto o sistema garante FSM rigorosa de contrato, trava fiscal NF×escrow e prova criptográfica de entrega.
+> **Steel Connect é uma infraestrutura de mercado B2B financeiro-industrial** que conecta compradores, fornecedores e transportadoras de aço através de **micro-leilão reverso com escrow** — entregando ao usuário uma experiência simples de "estou negociando", enquanto o sistema garante FSM rigorosa de contrato, trava fiscal NF×escrow e prova criptográfica de entrega.
 
 **Não é um marketplace tradicional.** É infraestrutura de mercado: o sistema é a fonte única da verdade sobre estado, dinheiro e prova.
 
@@ -40,7 +40,7 @@ O mercado brasileiro de aço movimenta dezenas de bilhões de reais ao ano e ain
 2. **Risco financeiro descalibrado** — pré-pagamento sem garantia de entrega ou pós-pagamento sem garantia de recebimento. Quem segura o caixa, tem o poder. Quem não tem, sofre.
 3. **Logística terceira** — frete cotado fora do contrato, sem prova auditável de entrega. Disputa vira "ele falou, ela falou".
 
-A Still Connect não compete com marketplace de aço — **ela é a infraestrutura financeira e logística que torna o mercado de aço competitivo**.
+A Steel Connect não compete com marketplace de aço — **ela é a infraestrutura financeira e logística que torna o mercado de aço competitivo**.
 
 ### Posicionamento (uma frase para o pitch)
 
@@ -71,7 +71,7 @@ Antes de queimar capital, validar 5 hipóteses em ordem:
 ### H2 — Oferta
 **Fornecedores (siderúrgicas e distribuidores grandes) entram na plataforma se o pipeline de demandas qualificadas justificar.**
 - *Como validar:* 10 entrevistas com diretores comerciais de produtores/distribuidores.
-- *Sinal positivo:* concordam em entrar se a Still trouxer ≥10 demandas/mês qualificadas e exclusividade ≥30 dias na primeira onda.
+- *Sinal positivo:* concordam em entrar se a Steel trouxer ≥10 demandas/mês qualificadas e exclusividade ≥30 dias na primeira onda.
 
 ### H3 — Logística
 **Transportadoras de carga industrial topam leilão de frete em vez de tabela.**
@@ -163,7 +163,7 @@ O MVP **não é a plataforma toda**. É o **menor recorte que prova as 5 hipóte
 
 ### Wave 4 — Network (M13–M24)
 - Crédito embedded: antecipação para fornecedor + financiamento para comprador
-- Inteligência de preço: índice Still de preço de aço (a la Trading Economics)
+- Inteligência de preço: índice Steel de preço de aço (a la Trading Economics)
 - Expansão LATAM: México (acero), Argentina, Colômbia
 - Adjacências: cimento, vidro plano, ferragens
 
@@ -175,7 +175,7 @@ O MVP **não é a plataforma toda**. É o **menor recorte que prova as 5 hipóte
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      STILL CONNECT                               │
+│                      STEEL CONNECT                               │
 └─────────────────────────────────────────────────────────────────┘
 
   Web (Comprador / Fornecedor)        Mobile (Transportadora)
@@ -306,7 +306,7 @@ Upload XML → leitura <vNF> → comparar com valor em escrow
 ### Por que essa estrutura funciona
 
 - **Setup** garante skin-in-the-game; cliente que pagou 15k não trata como experimento.
-- **Take rate** alinha o incentivo: Still ganha quando o mercado funciona.
+- **Take rate** alinha o incentivo: Steel ganha quando o mercado funciona.
 - **Float** é receita "de graça" — dinheiro fica retido durante 5-15 dias entre escrow e split.
 - **Crédito embedded (Wave 4)** é o que multiplica receita por 5x sobre take rate puro.
 
@@ -358,8 +358,8 @@ Upload XML → leitura <vNF> → comparar com valor em escrow
 1. **Fosso de Compliance** *(curto prazo)* — primeiros a ter selo BACEN (se virar IP) e certificação ISO 27001 + SOC 2 Type II. Barreira regulatória brutal pra entrante.
 2. **Fosso de Banco Parceiro** *(curto prazo)* — contrato de exclusividade ou multi-banco redundante. Sem escrow real, não tem produto. Concorrente novo precisa repetir essa negociação.
 3. **Fosso de Network Effect** *(médio prazo)* — comprador entra pelos fornecedores; fornecedor entra pelos compradores. Duas-pontas. Quanto mais densidade, maior é o fosso. Liquidez é destino, não meio.
-4. **Fosso de Dados Proprietários** *(médio-longo prazo)* — cada leilão treina o modelo de preço. Em 2 anos, Still tem o melhor índice de preço de aço do Brasil — vira dado vendável.
-5. **Fosso de Marca** *(longo prazo)* — virar a "categoria": *"Vamos passar pelo Still Connect, é mais limpo"*. Quem cria categoria define as regras.
+4. **Fosso de Dados Proprietários** *(médio-longo prazo)* — cada leilão treina o modelo de preço. Em 2 anos, Steel tem o melhor índice de preço de aço do Brasil — vira dado vendável.
+5. **Fosso de Marca** *(longo prazo)* — virar a "categoria": *"Vamos passar pelo Steel Connect, é mais limpo"*. Quem cria categoria define as regras.
 
 ---
 
@@ -474,7 +474,7 @@ Nada é pronto se:
 5. **FSM do contrato visual** mostrando estado evoluindo: GERADO → ACEITO → ATIVO → ENTREGUE → CONCLUÍDO
 6. **Trava Fiscal** em ação: upload XML simulado, comparação vNF × escrow, decisão automática (≤R$ 1) ou waiver
 7. **Logística com prova criptográfica** (visual de mapa + foto + assinatura) e janela de 72h
-8. **Split automático** no fechamento: dinheiro distribuído entre Fornecedor + Transportadora + Still
+8. **Split automático** no fechamento: dinheiro distribuído entre Fornecedor + Transportadora + Steel
 9. **Dashboard Admin** com audit log e métricas Business Heartbeat
 
 ### Modo alternativo na POC: coleta de ofertas (RFQ)
@@ -488,7 +488,7 @@ Para demos em que **“oferta fechada + aceite pelo comprador”** comunica melh
 - WebSocket real (lances simulados via timer no client)
 - Mobile app dedicado pra transportadora (representado como tela mockada)
 - Mediação de disputa (apenas estado visível, sem UI de admin avançada)
-- Multi-tenant real (1 tenant fixo "Still Connect Demo")
+- Multi-tenant real (1 tenant fixo "Steel Connect Demo")
 
 ### Stack proposta (igual ao Memora)
 
@@ -514,7 +514,7 @@ Para demos em que **“oferta fechada + aceite pelo comprador”** comunica melh
 ### Tour de 60s
 
 Sequência narrada:
-- (3s) Tour de 60s — Still Connect: infraestrutura de mercado de aço
+- (3s) Tour de 60s — Steel Connect: infraestrutura de mercado de aço
 - (5s) Comprador cria demanda — preço-alvo confidencial
 - (4s) Marketplace anonimizado — fornecedores não sabem o nome do comprador
 - (4s) Match + seleção — comprador escolhe baseado em score

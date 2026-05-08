@@ -131,7 +131,7 @@ export default function Escrow() {
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
             <Slice label="Produto" value={contract.product_price_brl} color="bg-molten-500" />
             <Slice label="Frete" value={contract.freight_price_brl} color="bg-emerald-500" />
-            <Slice label="Fee Still" value={contract.fee_brl} color="bg-steel-700" />
+            <Slice label="Fee Steel Connect" value={contract.fee_brl} color="bg-steel-700" />
           </div>
         </div>
 

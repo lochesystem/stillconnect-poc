@@ -47,7 +47,7 @@ export default function Layout() {
               <BadgeCheck className="w-5 h-5 text-molten-400" />
             </div>
             <div className="leading-tight">
-              <div className="font-bold text-steel-900">Still Connect</div>
+              <div className="font-bold text-steel-900">Steel Connect</div>
               <div className="text-[10px] text-steel-500 uppercase tracking-wider font-semibold">
                 POC · Demo
               </div>

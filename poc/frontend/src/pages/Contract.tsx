@@ -106,7 +106,7 @@ export default function Contract() {
             <div className="label">Valor total</div>
             <div className="text-2xl font-bold font-mono text-steel-900">{brl(total)}</div>
             <div className="text-xs text-steel-500 mt-0.5">
-              fee Still: {brl(contract.fee_brl)}
+              fee Steel Connect: {brl(contract.fee_brl)}
             </div>
           </div>
         </div>
